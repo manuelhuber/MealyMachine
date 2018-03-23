@@ -29,7 +29,7 @@ public class JsonFileInput implements InputStrategy {
     @Override
     public Iterator<Symbol> putIn(List<Symbol> allowedAlphabet) {
         try {
-            DirectoryStream<Path> directoryStream = Files.newDirectoryStream(BASE_PATH);
+            DirectoryStream<Path> directoryStream = Files.newDirectoryStream(BASE_PATH, "*.msg");
             // This is a iterator over every filepath in the directory
             Iterator<Path> pathIterator = directoryStream.iterator();
 
@@ -49,6 +49,7 @@ public class JsonFileInput implements InputStrategy {
                     File file = pathIterator.next().toFile();
                     try {
                         Message message = readFile(file);
+                        if (message == null) wrongInput(allowedAlphabet);
 
                         /*
                          * We assume the requirement is that only the type of the message is relevant
@@ -60,8 +61,7 @@ public class JsonFileInput implements InputStrategy {
                                 ).findAny();
 
                         if (!symbolOptional.isPresent()) {
-                            unknownSymbolMessage(allowedAlphabet);
-                            throw new RuntimeException("Such is life");
+                            wrongInput(allowedAlphabet);
                         }
 
                         // KILL! MAIM! BURN! KILL! MAIM! BURN! KILL! MAIM! BURN!
@@ -80,6 +80,11 @@ public class JsonFileInput implements InputStrategy {
             throw new RuntimeException("No input files found ind the directory " + BASE_PATH.toAbsolutePath());
         }
 
+    }
+
+    private Symbol wrongInput(List<Symbol> allowedAlphabet) {
+        unknownSymbolMessage(allowedAlphabet);
+        throw new RuntimeException("Such is life");
     }
 
     /**

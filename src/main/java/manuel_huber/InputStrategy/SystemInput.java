@@ -29,7 +29,6 @@ public class SystemInput implements InputStrategy {
                         .findFirst())
                 // No symbol found -> filter it away
                 .filter(symbolOptional -> {
-
                     boolean isPresent = symbolOptional.isPresent();
                     if (!isPresent) {
                         unknownSymbolMessage(allowedAlphabet);
