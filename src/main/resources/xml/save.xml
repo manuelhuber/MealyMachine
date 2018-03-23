@@ -1,0 +1,75 @@
+<machine>
+  <states>
+    <state>
+      <name>S1</name>
+    </state>
+    <state>
+      <name>S2</name>
+    </state>
+  </states>
+  <inputAlphabet>
+    <symbol>
+      <symbol>A</symbol>
+    </symbol>
+    <symbol>
+      <symbol>B</symbol>
+    </symbol>
+  </inputAlphabet>
+  <outputAlphabet reference="../inputAlphabet"/>
+  <transformationTable>
+    <entry>
+      <state reference="../../../states/state[2]"/>
+      <map>
+        <entry>
+          <symbol reference="../../../../../inputAlphabet/symbol[2]"/>
+          <state reference="../../../../../states/state"/>
+        </entry>
+        <entry>
+          <symbol reference="../../../../../inputAlphabet/symbol"/>
+          <state reference="../../../../../states/state[2]"/>
+        </entry>
+      </map>
+    </entry>
+    <entry>
+      <state reference="../../../states/state"/>
+      <map>
+        <entry>
+          <symbol reference="../../../../../inputAlphabet/symbol[2]"/>
+          <state reference="../../../../../states/state[2]"/>
+        </entry>
+        <entry>
+          <symbol reference="../../../../../inputAlphabet/symbol"/>
+          <state reference="../../../../../states/state"/>
+        </entry>
+      </map>
+    </entry>
+  </transformationTable>
+  <outputTable>
+    <entry>
+      <state reference="../../../states/state[2]"/>
+      <map>
+        <entry>
+          <symbol reference="../../../../../inputAlphabet/symbol[2]"/>
+          <symbol reference="../../../../../inputAlphabet/symbol"/>
+        </entry>
+        <entry>
+          <symbol reference="../../../../../inputAlphabet/symbol"/>
+          <symbol reference="../../../../../inputAlphabet/symbol[2]"/>
+        </entry>
+      </map>
+    </entry>
+    <entry>
+      <state reference="../../../states/state"/>
+      <map>
+        <entry>
+          <symbol reference="../../../../../inputAlphabet/symbol[2]"/>
+          <symbol reference="../../../../../inputAlphabet/symbol"/>
+        </entry>
+        <entry>
+          <symbol reference="../../../../../inputAlphabet/symbol"/>
+          <symbol reference="../../../../../inputAlphabet/symbol[2]"/>
+        </entry>
+      </map>
+    </entry>
+  </outputTable>
+</machine>
