@@ -1,10 +1,10 @@
 package manuel_huber.model;
 
+import manuel_huber.InputStrategy.InputStrategy;
+import manuel_huber.OutputStrategy.OutputStrategy;
+
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.stream.Collectors;
 
 public class MealyMachine {
 
@@ -28,6 +28,8 @@ public class MealyMachine {
 
     // Runtime stuff
     private State state;
+    private OutputStrategy outputStrategy;
+    private InputStrategy inputStrategy;
 
     public List<State> getStates() {
         return states;
@@ -69,7 +71,33 @@ public class MealyMachine {
         this.outputTable = outputTable;
     }
 
+    public OutputStrategy getOutputStrategy() {
+        return outputStrategy;
+    }
+
+    public MealyMachine setOutputStrategy(OutputStrategy outputStrategy) {
+        this.outputStrategy = outputStrategy;
+        return this;
+    }
+
+    public InputStrategy getInputStrategy() {
+        return inputStrategy;
+    }
+
+    public MealyMachine setInputStrategy(InputStrategy inputStrategy) {
+        this.inputStrategy = inputStrategy;
+        return this;
+    }
+
     public void start() {
+        if (inputStrategy == null) {
+            System.out.println("No input strategy");
+            return;
+        }
+        if (outputStrategy == null) {
+            System.out.println("No output strategy");
+            return;
+        }
         state = states.get(0);
         while (true) {
             tick();
@@ -77,18 +105,9 @@ public class MealyMachine {
     }
 
     private void tick() {
-        Scanner sc = new Scanner(System.in);
-        String input = sc.nextLine();
-        Optional<Symbol> inputSymbol = inputAlphabet.stream().filter(symbol -> symbol.getSymbol().equals(input)).findFirst();
-        if (!inputSymbol.isPresent()) {
-            System.out.println("Unknown input. Please use one of the following strings:");
-            System.out.println(inputAlphabet.stream().map(Symbol::getSymbol).collect(Collectors.joining(", ")));
-            return;
-        }
-        System.out.println("Output:");
-        System.out.println(this.getOutputTable().get(state).get(inputSymbol.get()).getSymbol());
-        state = this.transformationTable.get(state).get(inputSymbol.get());
-        System.out.println("New state");
-        System.out.println(state.getName());
+        Symbol inputSymbol = inputStrategy.putIn(inputAlphabet);
+        outputStrategy.putOut(this.getOutputTable().get(state).get(inputSymbol));
+        state = this.transformationTable.get(state).get(inputSymbol);
     }
+
 }
