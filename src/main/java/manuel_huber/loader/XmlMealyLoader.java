@@ -1,12 +1,12 @@
 package manuel_huber.loader;
 
 import com.thoughtworks.xstream.XStream;
+import manuel_huber.model.Constants;
 import manuel_huber.model.MealyMachine;
 import manuel_huber.model.State;
 import manuel_huber.model.Symbol;
 
 import java.io.*;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,7 +19,7 @@ import java.util.Map;
  */
 public class XmlMealyLoader {
 
-    private static final Path BASE_PATH = FileSystems.getDefault().getPath("src", "main", "resources", "xml");
+    private static final Path BASE_PATH = Constants.RESOURCE_PATH.resolve("xml");
     private static final String SAVE_XML = BASE_PATH.resolve("save.xml").toString();
 
     // This is an external library to handle XML (de-)serialization

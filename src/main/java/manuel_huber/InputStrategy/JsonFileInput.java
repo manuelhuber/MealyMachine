@@ -3,6 +3,7 @@ package manuel_huber.InputStrategy;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import manuel_huber.model.Constants;
 import manuel_huber.model.Message;
 import manuel_huber.model.Symbol;
 
@@ -11,7 +12,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -24,12 +24,12 @@ import java.util.Optional;
  */
 public class JsonFileInput implements InputStrategy {
 
-    private static final Path BASE_PATH = FileSystems.getDefault().getPath("src", "main", "resources", "input");
+    private static final Path BASE_PATH = Constants.RESOURCE_PATH.resolve("input");
 
     @Override
     public Iterator<Symbol> putIn(List<Symbol> allowedAlphabet) {
         try {
-            DirectoryStream<Path> directoryStream = Files.newDirectoryStream(BASE_PATH, "*.msg");
+            DirectoryStream<Path> directoryStream = Files.newDirectoryStream(BASE_PATH, "*" + Constants.MESSAGE_SUFFIX);
             // This is a iterator over every filepath in the directory
             Iterator<Path> pathIterator = directoryStream.iterator();
 
