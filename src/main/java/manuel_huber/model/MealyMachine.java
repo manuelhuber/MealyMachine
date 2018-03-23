@@ -3,6 +3,7 @@ package manuel_huber.model;
 import manuel_huber.InputStrategy.InputStrategy;
 import manuel_huber.OutputStrategy.OutputStrategy;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -99,15 +100,14 @@ public class MealyMachine {
             return;
         }
         state = states.get(0);
-        while (true) {
-            tick();
-        }
-    }
 
-    private void tick() {
-        Symbol inputSymbol = inputStrategy.putIn(inputAlphabet);
-        outputStrategy.putOut(this.getOutputTable().get(state).get(inputSymbol));
-        state = this.transformationTable.get(state).get(inputSymbol);
+        Iterator<Symbol> input = inputStrategy.putIn(inputAlphabet);
+        while (input.hasNext()) {
+            Symbol inputSymbol = input.next();
+            if (inputSymbol == null) System.out.println("Done");
+            outputStrategy.putOut(this.getOutputTable().get(state).get(inputSymbol));
+            state = this.transformationTable.get(state).get(inputSymbol);
+        }
     }
 
 }
