@@ -1,5 +1,8 @@
 package manuel_huber.model;
 
+/**
+ * This will be the content of the JSON files we use as input
+ */
 public class Message {
     private String type;
     private String payload;

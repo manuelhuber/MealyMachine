@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Reads {@link Message}s from JSON files in the resources/input directory.
@@ -53,11 +54,12 @@ public class JsonFileInput implements InputStrategy {
                          * We assume the requirement is that only the type of the message is relevant
                          * So we ignore the payload and only use the type to look for the input symbol
                          */
-                        Symbol symbol = allowedAlphabet.stream().filter(sym ->
-                                sym.getSymbol().equals(message.getType())
-                        ).findAny().orElseGet(null);
+                        Optional<Symbol> symbolOptional =
+                                allowedAlphabet.stream().filter(sym ->
+                                        sym.getSymbol().equals(message.getType())
+                                ).findAny();
 
-                        if (symbol == null) {
+                        if (!symbolOptional.isPresent()) {
                             unknownSymbolMessage(allowedAlphabet);
                             throw new RuntimeException("Such is life");
                         }
@@ -67,7 +69,7 @@ public class JsonFileInput implements InputStrategy {
                             System.err.println("Couldn't delete file " + file.getAbsolutePath());
                         }
 
-                        return symbol;
+                        return symbolOptional.get();
                     } catch (IOException e) {
                         throw new RuntimeException("The file " + file.getAbsolutePath() + " contained invalid data");
                     }
