@@ -1,4 +1,4 @@
 {
-  "type": "A",
+  "type": "B",
   "payload": "Something something"
 }

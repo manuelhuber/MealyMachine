@@ -22,13 +22,13 @@ public class SystemInput implements InputStrategy {
                         .stream()
                         .filter(symbol -> symbol.getSymbol().equals(s))
                         .findFirst())
-                .filter(symbol -> {
-                    boolean keep = symbol.isPresent();
-                    if (!keep) {
+                .filter(symbolOptional -> {
+                    boolean isPresent = symbolOptional.isPresent();
+                    if (!isPresent) {
                         System.out.println("Unknown input. Please use one of the following strings:");
                         System.out.println(allowedAlphabet.stream().map(Symbol::getSymbol).collect(Collectors.joining(", ")));
                     }
-                    return keep;
+                    return isPresent;
                 }).map(Optional::get).iterator();
     }
 }
