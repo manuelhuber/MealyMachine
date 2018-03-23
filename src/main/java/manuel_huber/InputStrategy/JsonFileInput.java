@@ -46,13 +46,27 @@ public class JsonFileInput implements InputStrategy {
                 public Symbol next() {
                     // First get the next path and create a file
                     File file = pathIterator.next().toFile();
-                    Message message;
                     try {
-                        message = readFile(file);
-                        // Find the symbol in the alphabet
-                        Symbol symbol = allowedAlphabet.stream().filter(symbol1 -> symbol1.getSymbol().equals(message.getType())).findAny().get();
+                        Message message = readFile(file);
+
+                        /*
+                         * We assume the requirement is that only the type of the message is relevant
+                         * So we ignore the payload and only use the type to look for the input symbol
+                         */
+                        Symbol symbol = allowedAlphabet.stream().filter(sym ->
+                                sym.getSymbol().equals(message.getType())
+                        ).findAny().orElseGet(null);
+
+                        if (symbol == null) {
+                            unknownSymbolMessage(allowedAlphabet);
+                            throw new RuntimeException("Such is life");
+                        }
+
                         // KILL! MAIM! BURN! KILL! MAIM! BURN! KILL! MAIM! BURN!
-                        file.delete();
+                        if (!file.delete()) {
+                            System.err.println("Couldn't delete file " + file.getAbsolutePath());
+                        }
+
                         return symbol;
                     } catch (IOException e) {
                         throw new RuntimeException("The file " + file.getAbsolutePath() + " contained invalid data");

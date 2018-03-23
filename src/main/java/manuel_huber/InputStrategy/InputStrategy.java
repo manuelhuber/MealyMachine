@@ -4,6 +4,7 @@ import manuel_huber.model.Symbol;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Strategy to read symbols as input for the machine
@@ -16,5 +17,14 @@ public interface InputStrategy {
      * @param allowedAlphabet A list of all valid inpus
      * @return iterator of symbols
      */
-    public Iterator<Symbol> putIn(List<Symbol> allowedAlphabet);
+    Iterator<Symbol> putIn(List<Symbol> allowedAlphabet);
+
+    /**
+     * Yeah, just put an implementation in an interface. That's what they are for, right?!
+     */
+    default void unknownSymbolMessage(List<Symbol> allowedAlphabet) {
+        System.out.println("Unknown input. Please use one of the following strings:");
+        System.out.println(allowedAlphabet.stream().map(Symbol::getSymbol).collect(Collectors.joining(", ")));
+
+    }
 }

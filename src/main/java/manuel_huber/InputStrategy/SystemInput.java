@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -33,8 +32,7 @@ public class SystemInput implements InputStrategy {
 
                     boolean isPresent = symbolOptional.isPresent();
                     if (!isPresent) {
-                        System.out.println("Unknown input. Please use one of the following strings:");
-                        System.out.println(allowedAlphabet.stream().map(Symbol::getSymbol).collect(Collectors.joining(", ")));
+                        unknownSymbolMessage(allowedAlphabet);
                     }
                     return isPresent;
                 }).map(Optional::get).iterator();
