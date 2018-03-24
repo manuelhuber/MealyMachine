@@ -111,6 +111,7 @@ public class MealyMachine {
             outputStrategy.putOut(this.getOutputTable().get(state).get(inputSymbol));
             state = this.transformationTable.get(state).get(inputSymbol);
         }
+        System.out.println("done");
     }
 
 }
