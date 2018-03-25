@@ -12,17 +12,28 @@ import java.util.concurrent.BlockingQueue;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 
+/**
+ * Watches the "watch" folder of the resources and whenever a new JSON file is added, it parses the containing
+ * {@link manuel_huber.model.Message} to a symbol which is used as input for the machine
+ */
 public class JsonFileWatchInput implements InputStrategy {
 
     private static final Path BASE_PATH = Constants.RESOURCE_PATH.resolve("watch");
-    private WatchService watchService;
-    private BlockingQueue<Symbol> queue = new ArrayBlockingQueue<>(100);
+
     /**
-     * The next input symbol
+     * This thread watches the directory and fills the queue with new symbols
+     */
+    private Thread watcherThread;
+
+    /**
+     * We cache the next symbol outside of the queue for easier handling in the iterator
      */
     private Symbol next;
-    private Thread watcherThread;
-    private Thread mainThread;
+
+    /**
+     * The threads will exchange symbols via this queue
+     */
+    private BlockingQueue<Symbol> queue = new ArrayBlockingQueue<>(100);
 
     @Override
     public Iterator<Symbol> putIn(List<Symbol> allowedAlphabet) {
@@ -34,6 +45,7 @@ public class JsonFileWatchInput implements InputStrategy {
             public boolean hasNext() {
                 try {
                     if (next == null) {
+                        // Get the next symbol from the queue
                         next = queue.take(); // .take() is a blocking function call - the main thread will wait here
                     }
                     return true;
@@ -55,18 +67,19 @@ public class JsonFileWatchInput implements InputStrategy {
      * Initialises a watcher thread if necessary
      */
     private void init(List<Symbol> allowedAlphabet) {
-        mainThread = Thread.currentThread();
         if (watcherThread != null) return;
         watcherThread = new Thread(() -> {
             try {
-                watchService = FileSystems.getDefault().newWatchService();
+                WatchService watchService = FileSystems.getDefault().newWatchService();
                 BASE_PATH.register(watchService, ENTRY_CREATE);
                 WatchKey key;
                 // .take() is a blocking function - the watcher thread will wait here
                 while ((key = watchService.take()) != null) {
                     fillQueueFromKey(key, allowedAlphabet);
                 }
-                mainThread.interrupt();
+
+                // TODO: inform the main thread that this thread has ended and make it all end nicely
+
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
