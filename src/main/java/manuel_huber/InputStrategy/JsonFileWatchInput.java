@@ -17,55 +17,75 @@ public class JsonFileWatchInput implements InputStrategy {
     private static final Path BASE_PATH = Constants.RESOURCE_PATH.resolve("watch");
     private WatchService watchService;
     private BlockingQueue<Symbol> queue = new ArrayBlockingQueue<>(100);
-
-    public JsonFileWatchInput() {
-        init();
-    }
+    /**
+     * The next input symbol
+     */
+    private Symbol next;
+    private List<Symbol> allowedAlphabet;
+    private Thread watcherThread;
 
     @Override
     public Iterator<Symbol> putIn(List<Symbol> allowedAlphabet) {
+        this.allowedAlphabet = allowedAlphabet;
+        this.init();
+
         return new Iterator<Symbol>() {
+
             @Override
             public boolean hasNext() {
                 try {
-                    fillQueueFromKey(watchService.take(), allowedAlphabet);
+                    if (next == null) {
+                        next = queue.take(); // .take() is a blocking function call - the main thread will wait here
+                    }
                     return true;
-                } catch (InterruptedException | IOException e) {
+                } catch (InterruptedException e) {
                     return false;
                 }
             }
 
             @Override
             public Symbol next() {
-                try {
-                    return queue.take();
-                } catch (InterruptedException e) {
-                    System.err.println("Error taking from queue");
-                    return null;
-                }
+                Symbol symbol = next;
+                next = null;
+                return symbol;
             }
         };
     }
 
     public void init() {
-        new Thread(() -> {
+        if (watcherThread != null) return;
+
+        watcherThread = new Thread(() -> {
             try {
                 watchService = FileSystems.getDefault().newWatchService();
                 BASE_PATH.register(watchService, ENTRY_CREATE);
-            } catch (IOException e) {
+                boolean allIsFine;
+                do {
+                    // .take() is a blocking function - the watcher thread will wait here
+                    allIsFine = fillQueueFromKey(watchService.take(), allowedAlphabet);
+                } while (allIsFine);
+
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
-        }).start();
+        });
+
+        watcherThread.start();
     }
 
-    private void fillQueueFromKey(WatchKey key, List<Symbol> allowedAlphabet) throws IOException, InterruptedException {
-        // process events
-        for (WatchEvent<?> event : key.pollEvents()) {
-            WatchEvent<Path> ev = (WatchEvent<Path>) event;
-            Path filename = BASE_PATH.resolve(ev.context());
-            queue.put(JsonReaderUtil.readFile(filename.toFile(), allowedAlphabet, true));
+    private boolean fillQueueFromKey(WatchKey key, List<Symbol> allowedAlphabet) {
+        try {
+            // process events
+            for (WatchEvent<?> event : key.pollEvents()) {
+                WatchEvent<Path> pathEvent = (WatchEvent<Path>) event;
+                Path filename = BASE_PATH.resolve(pathEvent.context());
+                queue.put(JsonReaderUtil.readFile(filename.toFile(), allowedAlphabet, true));
+            }
+            // reset the key
+            key.reset();
+            return true;
+        } catch (InterruptedException | IOException e) {
+            return false;
         }
-        // reset the key
-        boolean valid = key.reset();
     }
 }
