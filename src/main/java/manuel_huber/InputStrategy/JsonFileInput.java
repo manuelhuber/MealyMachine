@@ -4,7 +4,6 @@ import manuel_huber.model.Constants;
 import manuel_huber.model.Message;
 import manuel_huber.model.Symbol;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -42,11 +41,11 @@ public class JsonFileInput implements InputStrategy {
                 @Override
                 public Symbol next() {
                     // First get the next path and create a file
-                    File file = pathIterator.next().toFile();
+                    Path file = pathIterator.next();
                     try {
                         return readFile(file, allowedAlphabet, true);
                     } catch (IOException e) {
-                        throw new RuntimeException("The file " + file.getAbsolutePath() + " contained invalid data");
+                        throw new RuntimeException("The file " + file.toString() + " contained invalid data");
                     }
                 }
             };

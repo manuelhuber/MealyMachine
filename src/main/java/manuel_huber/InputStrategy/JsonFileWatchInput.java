@@ -21,13 +21,12 @@ public class JsonFileWatchInput implements InputStrategy {
      * The next input symbol
      */
     private Symbol next;
-    private List<Symbol> allowedAlphabet;
     private Thread watcherThread;
+    private Thread mainThread;
 
     @Override
     public Iterator<Symbol> putIn(List<Symbol> allowedAlphabet) {
-        this.allowedAlphabet = allowedAlphabet;
-        this.init();
+        this.init(allowedAlphabet);
 
         return new Iterator<Symbol>() {
 
@@ -52,19 +51,19 @@ public class JsonFileWatchInput implements InputStrategy {
         };
     }
 
-    public void init() {
+    private void init(List<Symbol> allowedAlphabet) {
+        mainThread = Thread.currentThread();
         if (watcherThread != null) return;
-
         watcherThread = new Thread(() -> {
             try {
                 watchService = FileSystems.getDefault().newWatchService();
                 BASE_PATH.register(watchService, ENTRY_CREATE);
-                boolean allIsFine;
-                do {
-                    // .take() is a blocking function - the watcher thread will wait here
-                    allIsFine = fillQueueFromKey(watchService.take(), allowedAlphabet);
-                } while (allIsFine);
-
+                WatchKey key;
+                // .take() is a blocking function - the watcher thread will wait here
+                while ((key = watchService.take()) != null) {
+                    fillQueueFromKey(key, allowedAlphabet);
+                }
+                mainThread.interrupt();
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
@@ -73,19 +72,31 @@ public class JsonFileWatchInput implements InputStrategy {
         watcherThread.start();
     }
 
-    private boolean fillQueueFromKey(WatchKey key, List<Symbol> allowedAlphabet) {
+    private void fillQueueFromKey(WatchKey key, List<Symbol> allowedAlphabet) {
         try {
             // process events
             for (WatchEvent<?> event : key.pollEvents()) {
+                WatchEvent.Kind<?> kind = event.kind();
+                // This key is registered only for ENTRY_CREATE events, but an OVERFLOW event can
+                // occur if events are lost or discarded.
+                if (kind != ENTRY_CREATE) {
+                    continue;
+                }
+
                 WatchEvent<Path> pathEvent = (WatchEvent<Path>) event;
                 Path filename = BASE_PATH.resolve(pathEvent.context());
-                queue.put(JsonReaderUtil.readFile(filename.toFile(), allowedAlphabet, true));
+
+                // A shitty way to avoid a file access issues I can't figure out...
+                // The issue: the 2nd time I copy files to the folder (regardless if it's a single file or multiple)
+                // there is a error that the file is already in use by another process or thread
+//                Thread.currentThread().sleep(100);
+
+                queue.put(JsonReaderUtil.readFile(filename, allowedAlphabet, false));
             }
-            // reset the key
+
             key.reset();
-            return true;
         } catch (InterruptedException | IOException e) {
-            return false;
+            e.printStackTrace();
         }
     }
 }
