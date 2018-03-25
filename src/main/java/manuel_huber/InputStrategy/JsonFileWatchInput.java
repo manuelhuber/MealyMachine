@@ -51,6 +51,9 @@ public class JsonFileWatchInput implements InputStrategy {
         };
     }
 
+    /**
+     * Initialises a watcher thread if necessary
+     */
     private void init(List<Symbol> allowedAlphabet) {
         mainThread = Thread.currentThread();
         if (watcherThread != null) return;
@@ -72,6 +75,12 @@ public class JsonFileWatchInput implements InputStrategy {
         watcherThread.start();
     }
 
+    /**
+     * Takes the CREATE events from the key, makes Symbols out of the created files and fills the queue with them
+     *
+     * @param key             a WatchKey with CREATE events
+     * @param allowedAlphabet all allowed symbols
+     */
     private void fillQueueFromKey(WatchKey key, List<Symbol> allowedAlphabet) {
         try {
             for (WatchEvent<?> event : key.pollEvents()) {
@@ -82,28 +91,30 @@ public class JsonFileWatchInput implements InputStrategy {
                     continue;
                 }
 
-                WatchEvent<Path> pathEvent = (WatchEvent<Path>) event;
-                Path filename = BASE_PATH.resolve(pathEvent.context());
+                // Append the file path to the base path
+                Path filename = BASE_PATH.resolve(((WatchEvent<Path>) event).context());
 
-                // Ok, here's the deal:
-                // WatchService implementations are very platform dependant and depending on how the OS works you might
-                // get different events for what seems to the user like the same thing.
-                // When copying a file it might be created empty (and firing a CREATED event) and then be locked by the
-                // OS while it copies the content (and firing a MODIFIED event).
-                // Or it might just fire a CREATED event once everything is done.
-                // We don't konw.
-                // So we just wait until the file is readable since that's what works on my machine.
+                /*
+                Ok, here's the deal:
+                WatchService implementations are very platform dependant and depending on how the OS works you might
+                get different events for what seems to the user like the same thing.
+                When copying a file it might be created empty (and firing a CREATED event) and then be locked by the
+                OS while it copies the content (and firing a MODIFIED event).
+                Or it might just fire a CREATED event once everything is done.
+                We don't know.
+                So we just wait until the file is readable since that's what works on my machine.
+                 */
                 while (!Files.isReadable(filename)) {
-                    Thread.currentThread().sleep(10);
+                    Thread.sleep(10);
                 }
 
-                queue.put(JsonReaderUtil.readFile(filename, allowedAlphabet, false));
+                queue.put(JsonReaderUtil.getSymbolFromFile(filename, allowedAlphabet, false));
             }
 
+            // We need to reset the key to access other events in the same key
             key.reset();
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
-            key.reset();
         }
     }
 }

@@ -11,7 +11,7 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 
-import static manuel_huber.InputStrategy.JsonReaderUtil.readFile;
+import static manuel_huber.InputStrategy.JsonReaderUtil.getSymbolFromFile;
 
 /**
  * Reads {@link Message}s from JSON files in the resources/input directory.
@@ -43,7 +43,7 @@ public class JsonFileInput implements InputStrategy {
                     // First get the next path and create a file
                     Path file = pathIterator.next();
                     try {
-                        return readFile(file, allowedAlphabet, true);
+                        return getSymbolFromFile(file, allowedAlphabet, true);
                     } catch (IOException e) {
                         throw new RuntimeException("The file " + file.toString() + " contained invalid data");
                     }
@@ -54,11 +54,6 @@ public class JsonFileInput implements InputStrategy {
             throw new RuntimeException("No input files found ind the directory " + BASE_PATH.toAbsolutePath());
         }
 
-    }
-
-    private Symbol wrongInput(List<Symbol> allowedAlphabet) {
-        unknownSymbolMessage(allowedAlphabet);
-        throw new RuntimeException("Such is life");
     }
 
 }
