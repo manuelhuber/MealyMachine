@@ -74,7 +74,6 @@ public class JsonFileWatchInput implements InputStrategy {
 
     private void fillQueueFromKey(WatchKey key, List<Symbol> allowedAlphabet) {
         try {
-            // process events
             for (WatchEvent<?> event : key.pollEvents()) {
                 WatchEvent.Kind<?> kind = event.kind();
                 // This key is registered only for ENTRY_CREATE events, but an OVERFLOW event can
@@ -86,10 +85,17 @@ public class JsonFileWatchInput implements InputStrategy {
                 WatchEvent<Path> pathEvent = (WatchEvent<Path>) event;
                 Path filename = BASE_PATH.resolve(pathEvent.context());
 
-                // A shitty way to avoid a file access issues I can't figure out...
-                // The issue: the 2nd time I copy files to the folder (regardless if it's a single file or multiple)
-                // there is a error that the file is already in use by another process or thread
-//                Thread.currentThread().sleep(100);
+                // Ok, here's the deal:
+                // WatchService implementations are very platform dependant and depending on how the OS works you might
+                // get different events for what seems to the user like the same thing.
+                // When copying a file it might be created empty (and firing a CREATED event) and then be locked by the
+                // OS while it copies the content (and firing a MODIFIED event).
+                // Or it might just fire a CREATED event once everything is done.
+                // We don't konw.
+                // So we just wait until the file is readable since that's what works on my machine.
+                while (!Files.isReadable(filename)) {
+                    Thread.currentThread().sleep(10);
+                }
 
                 queue.put(JsonReaderUtil.readFile(filename, allowedAlphabet, false));
             }
@@ -97,6 +103,7 @@ public class JsonFileWatchInput implements InputStrategy {
             key.reset();
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
+            key.reset();
         }
     }
 }

@@ -16,9 +16,6 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        JsonFileWatchInput fo = new JsonFileWatchInput();
-        fo.init();
-
         XmlMealyLoader loader = new XmlMealyLoader();
         Scanner sc = new Scanner(System.in);
 
