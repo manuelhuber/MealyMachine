@@ -25,9 +25,12 @@ public class Main {
         switch (input) {
             case "JSON":
                 inputStrategy = new JsonFileInput();
+                System.out.println("Make sure there are files in the 'json' folder in the resources.");
+                System.out.println("ATENTION! The files will be deleted!");
                 break;
             case "JSON:WATCH":
                 inputStrategy = new JsonFileWatchInput();
+                System.out.println("Drop your files in the 'watch' folder in the resources");
                 break;
             default:
                 inputStrategy = new SystemInput();
